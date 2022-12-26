@@ -2,8 +2,8 @@ import numpy as np
 from scipy.optimize import fsolve, least_squares
 import math
 
-infile_name = "example_data-2"
-with open(f"{infile_name}.csv", "r") as infile:
+infile_name = "2x2"
+with open(f"data/{infile_name}.csv", "r") as infile:
     # load the entire spreadsheet into an array
     spreadsheet = infile.readlines()
 
@@ -18,9 +18,10 @@ with open(f"{infile_name}.csv", "r") as infile:
     # # print("all_female_types = ", all_female_types)
 
 
+
 def build_equations(vars):
-    # print("vars = ", vars)
-    # make a list to accumulate all equations into
+    # # print("vars = ", vars)
+    # # make a list to accumulate all equations into
     all_equations = []
 
     # for each enumerated row in the spreadsheet
@@ -43,7 +44,9 @@ def build_equations(vars):
 
         # if this is a normal equation row
         if male_id != 0 and female_id != 0:
-            # print("Normal Equation Row: ")
+
+            print("normal equation with index = ", row_idx)
+            
             # turn the alpha number into a float so we can use it in the equation
             alpha = float(alpha)
             # print("alpha = ", alpha)
@@ -57,15 +60,6 @@ def build_equations(vars):
             # print("(vars[num_male_types * num_female_types + num_male_types + female_id - 1]) = ", (vars[num_male_types * num_female_types + num_male_types + female_id - 1]))
             denominator = math.sqrt((vars[num_male_types * num_female_types + male_id - 1]) * (vars[num_male_types * num_female_types + num_male_types + female_id - 1]))
             
-            
-            
-            # print("num_male_types * num_female_types + male_id - 1 = ", num_male_types * num_female_types + male_id - 1)
-            # print("vars[num_male_types * num_female_types + male_id - 1] = ", vars[num_male_types * num_female_types + male_id - 1])
-            # print("num_male_types * num_female_types + num_male_types + female_id - 1 = ", num_male_types * num_female_types + num_male_types + female_id - 1)
-            # print("vars[num_male_types * num_female_types + num_male_types + female_id - 1] = ", vars[num_male_types * num_female_types + num_male_types + female_id - 1], "\n\n")
-            # print("num_male_types * num_female_types + male_id - 1 = ", num_male_types * num_female_types + male_id - 1)
-            # print("num_male_types * num_female_types + num_male_types + female_id - 1 = ", num_male_types * num_female_types + num_male_types + female_id - 1)
-            
             # build the exponential piece
             exponential_piece = math.exp(alpha)
             # print("exponential_piece = ", exponential_piece)
@@ -74,9 +68,15 @@ def build_equations(vars):
             new_equation = numerator / denominator - exponential_piece
             all_equations.append(new_equation)
 
+            print("numerator_idx = ", row_idx - 1)
+            print("denominator_idx_1 = ", num_male_types * num_female_types + male_id - 1)
+            print("denominator_idx_2 = ", num_male_types * num_female_types + num_male_types + female_id - 1)
+            print("exponential_piece = ", exponential_piece)
+
         # if this is a male constraint equation
         elif female_id == 0:
             # print("Male Constraint Equation Row: ")
+            print("male constraint equation with index = ", row_idx)
 
             # get the starting index of the sum to take
             starting_sum_idx = (male_id - 1) * num_female_types + 1
@@ -105,9 +105,15 @@ def build_equations(vars):
             # print("row_idx - 1 = ", row_idx - 1)
             all_equations.append(new_equation)
 
+            print("starting_sum_idx = ", (male_id - 1) * num_female_types + 1)
+            print("ending_sum_idx = ", (male_id - 1) * num_female_types + num_female_types)
+            print("male_num = ", int(male_num))
+            print("current_row_idx = ", row_idx - 1)
+
         # if this is a female constraint equation
         elif male_id == 0:
             # # print("female constraint equation line")
+            print("female constraint equation with index = ", row_idx)
 
             # get the starting index of the sum to take
             starting_sum_idx = 1
@@ -134,8 +140,19 @@ def build_equations(vars):
             new_equation = female_num - var_sum - vars[row_idx - 1]
             # print("row_idx - 1 = ", row_idx - 1)
             all_equations.append(new_equation)
+
+            print("starting_sum_idx = ", starting_sum_idx)
+            print("ending_sum_idx = ", ending_sum_idx)
+            print("female_id = ", female_id)
+            print("num_female_types = ", num_female_types)
+            print("female_num = ", female_num)
+            print("current_row_idx = ", row_idx - 1)
         
-        # print("\n\n\n")
+        print("\n\n\n")
+    
+
+    print("all_equations = ", all_equations)
+    print("vars = ", vars)
 
     return all_equations
 
@@ -150,24 +167,28 @@ for i in range(num_male_types + num_female_types):
     vars.append(50)
     bds.append((0, 100))
 
-# print(bds)
-# create an array that is going to hold all of our variables
-# vars = [0.00001 for i in range((num_male_types * num_female_types) + num_male_types + num_female_types)]
-# build_equations(vars)
+
+# all_equations = build_equations(vars)
+
+
+# # print(bds)
+# # create an array that is going to hold all of our variables
+# # vars = [0.00001 for i in range((num_male_types * num_female_types) + num_male_types + num_female_types)]
+# # build_equations(vars)
 # solve the system
 root = least_squares(build_equations, vars, bounds = ((0, 100)))
 
-with open(f"{infile_name}_solution.csv", "w") as outfile:
-    existing_headers = spreadsheet[0].strip()
-    existing_data = spreadsheet[1:]
+# with open(f"solutions/{infile_name}.csv", "w") as outfile:
+#     existing_headers = spreadsheet[0].strip()
+#     existing_data = spreadsheet[1:]
 
-    new_headers = f"{existing_headers},mu\n"
-    outfile.write(new_headers)
+#     new_headers = f"{existing_headers},mu\n"
+#     outfile.write(new_headers)
 
-    for idx in range(len(existing_data)):
-        existing_row = existing_data[idx].strip()
-        new_row = f"{existing_row},{str(root.x[idx])}\n"
-        outfile.write(new_row)
+#     for idx in range(len(existing_data)):
+#         existing_row = existing_data[idx].strip()
+#         new_row = f"{existing_row},{str(root.x[idx])}\n"
+#         outfile.write(new_row)
 
 
 
